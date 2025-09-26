@@ -629,23 +629,14 @@ def create_collaborate_page(container):
     GooeyLabel_SetColor(desc, 0x616161)
     GooeyContainer_AddWidget(win, container, 3, desc)
 
-    github_btn = GooeyButton_Create("View GitHub Repository", 150, 150, 300, 35, github_callback)
-    GooeyContainer_AddWidget(win, container, 3, github_btn)
-
-    contribute_btn = GooeyButton_Create("Contribute Guidelines", 150, 200, 300, 35, contribute_callback)
-    GooeyContainer_AddWidget(win, container, 3, contribute_btn)
-
-    issues_btn = GooeyButton_Create("Report Issues", 150, 250, 300, 35, issues_callback)
-    GooeyContainer_AddWidget(win, container, 3, issues_btn)
-
-    docs_btn = GooeyButton_Create("View Documentation", 150, 300, 300, 35, documentation_callback)
-    GooeyContainer_AddWidget(win, container, 3, docs_btn)
-
+    view_on_github_image = GooeyImage_Create("visit_github.png", 20, 180, int(625//2), int(151//2), github_callback)
+    GooeyContainer_AddWidget(win, container, 3, view_on_github_image)
+   
     note = GooeyLabel_Create(
-        "These options will open your web browser to the respective pages",
-        0.26, 30, 390
+        "This option will open an external web browser.",
+        0.26, 30, 300
     )
-    GooeyLabel_SetColor(note, 0x757575)
+    GooeyLabel_SetColor(note, 0x2196F3)
     GooeyContainer_AddWidget(win, container, 3, note)
 
 def create_install_page(container):
