@@ -19,6 +19,7 @@ import shutil
 import tkinter as tk
 from tkinter import filedialog, messagebox
 import webbrowser
+import subprocess
 
 install_in_progress = False
 current_page = 0
@@ -209,7 +210,14 @@ def terms_callback(checked):
 
 @GooeyButtonCallback
 def github_callback():
-    webbrowser.open("https://github.com/BinaryInkTN/GooeyGUI")
+    try:
+        user = os.environ.get("SUDO_USER")
+        if user:
+            subprocess.Popen(['sudo', '-u', user, 'xdg-open', "https://github.com/BinaryInkTN/GooeyGUI"])
+        else:
+            webbrowser.open("https://github.com/BinaryInkTN/GooeyGUI")
+    except Exception:
+        webbrowser.open("https://github.com/BinaryInkTN/GooeyGUI")
 
 @GooeyButtonCallback
 def contribute_callback():
