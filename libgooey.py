@@ -22,7 +22,7 @@ import pathlib
 
 
 # Load the shared library libname = "/usr/local/lib/libGooeyGUI.so"
-c_lib = ctypes.CDLL(str("./lib/libGooeyGUI.so"))
+c_lib = ctypes.CDLL("lib/libGooeyGUI.so")
 
 
 # void Gooey_Init(void);

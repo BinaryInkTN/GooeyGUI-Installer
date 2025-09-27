@@ -1,5 +1,4 @@
 from gooey_button import *
-from libgooey import *
 from gooey_container import *
 from gooey_window import *
 from gooey_label import *
@@ -23,12 +22,13 @@ import subprocess
 
 install_in_progress = False
 current_page = 0
-total_pages = 6
+total_pages = 7 
 install_path = "/usr/local"
 selected_components = []
 install_options = {"launch_docs": False, "install_picoflasher": False, "link_bashrc": True}
 source_path = os.path.dirname(os.path.abspath(__file__))
 accepted_terms = False
+is_sudo = False
 
 main_container = None
 progress_bar = None
@@ -67,6 +67,11 @@ def update_progress(value):
 def next_callback() -> None:
     global current_page, next_button, back_button, accepted_terms
 
+    if current_page == 0 and not is_sudo:  # Warning page
+        GooeyWindow_Cleanup(1, win)
+        sys.exit(1)
+        return
+
     if current_page == total_pages - 1:
         if install_options.get("launch_docs", True):
             launch_documentation()
@@ -74,12 +79,12 @@ def next_callback() -> None:
         sys.exit(0)
         return
 
-    if current_page == 1:
+    if current_page == 2:  
         GooeyWidget_MakeVisible(launch_check, install_options["launch_docs"])
         if not validate_options():
             return
 
-    if current_page == 2:
+    if current_page == 3:  # Terms page
         if not accepted_terms:
             update_status("You must accept the terms and conditions to continue")
             return
@@ -87,12 +92,11 @@ def next_callback() -> None:
     current_page += 1
     GooeyContainer_SetActiveContainer(main_container, current_page)
 
-    if current_page == 4:
+    if current_page == 5:  # Install page
         install_callback()
 
-
     GooeyButton_SetText(next_button, "Finish" if current_page == total_pages - 1 else "Next")
-    GooeyButton_SetEnabled(back_button, current_page > 0)
+    GooeyButton_SetEnabled(back_button, current_page > 0 and current_page != 5)
 
     if page_counter:
         GooeyLabel_SetText(page_counter, f"Page {current_page + 1} of {total_pages}")
@@ -229,7 +233,14 @@ def issues_callback():
 
 @GooeyButtonCallback
 def documentation_callback():
-    webbrowser.open("https://github.com/BinaryInkTN/GooeyGUI/wiki")
+    try:
+        user = os.environ.get("SUDO_USER")
+        if user:
+            subprocess.Popen(['sudo', '-u', user, 'xdg-open', "https://github.com/BinaryInkTN/GooeyGUI-Python"])
+        else:
+            webbrowser.open("https://github.com/BinaryInkTN/GooeyGUI-Python")
+    except Exception:
+        webbrowser.open("https://github.com/BinaryInkTN/GooeyGUI-Python")
 
 def validate_options():
     global install_path
@@ -500,45 +511,65 @@ def install_thread():
         GooeyButton_SetText(next_button, "Finish")
         GooeyButton_SetEnabled(back_button, False)
 
-def create_welcome_page(container):
+def create_warning_page(container):
     bg = GooeyCanvas_Create(0, 0, 600, 400, canvas_callback)
     GooeyCanvas_DrawRectangle(bg, 0, 0, 600, 400, 0xF5F5F5, True, 1.0, False, 0.0)
     GooeyContainer_AddWidget(win, container, 0, bg)
 
+    warning_icon = GooeyImage_Create("exclamation.png", 45, 75, 96, 96, image_placeholder_callback)
+    GooeyContainer_AddWidget(win, container, 0, warning_icon)
+
+    title = GooeyLabel_Create("Administrator Privileges Required", 0.5, 50, 220)
+    GooeyLabel_SetColor(title, 0xFF0000)
+    GooeyContainer_AddWidget(win, container, 0, title)
+
+    msg = GooeyLabel_Create("This installer requires sudo privileges to proceed.", 0.26, 50, 260)
+    GooeyLabel_SetColor(msg, 0x424242)
+    GooeyContainer_AddWidget(win, container, 0, msg)
+
+    steps = GooeyLabel_Create("Please run the installer with sudo (e.g., 'sudo ./gooey_installer').", 0.26, 50, 290)
+    GooeyLabel_SetColor(steps, 0x616161)
+    GooeyContainer_AddWidget(win, container, 0, steps)
+
+def create_welcome_page(container):
+    bg = GooeyCanvas_Create(0, 0, 600, 400, canvas_callback)
+    GooeyCanvas_DrawRectangle(bg, 0, 0, 600, 400, 0xF5F5F5, True, 1.0, False, 0.0)
+    GooeyContainer_AddWidget(win, container, 1, bg)
+
     gooey_logo = GooeyImage_Create("gooey_logo.png", 50, 20, 84, 84, image_placeholder_callback)
-    GooeyContainer_AddWidget(win, container, 0, gooey_logo)
+    GooeyContainer_AddWidget(win, container, 1, gooey_logo)
 
     title = GooeyLabel_Create("Gooey Framework v1.0.3 Installer", 0.5, 50, 150)
     GooeyLabel_SetColor(title, 0x2196F3)
-    GooeyContainer_AddWidget(win, container, 0, title)
+    GooeyContainer_AddWidget(win, container, 1, title)
 
     msg = GooeyLabel_Create("Welcome to the Gooey Framework installation wizard", 0.26, 50, 190)
     GooeyLabel_SetColor(msg, 0x424242)
-    GooeyContainer_AddWidget(win, container, 0, msg)
+    GooeyContainer_AddWidget(win, container, 1, msg)
 
     desc = GooeyLabel_Create(
         "This wizard will guide you through the installation of Gooey Framework, "
         "a modern GUI framework for C applications.", 0.26, 50, 220
     )
     GooeyLabel_SetColor(desc, 0x616161)
-    GooeyContainer_AddWidget(win, container, 0, desc)
+    GooeyContainer_AddWidget(win, container, 1, desc)
 
     req = GooeyLabel_Create("System Requirements: C compiler, 50MB disk space", 0.26, 50, 360)
     GooeyLabel_SetColor(req, 0x757575)
-    GooeyContainer_AddWidget(win, container, 0, req)
+    GooeyContainer_AddWidget(win, container, 1, req)
 
 def create_options_page(container):
     bg = GooeyCanvas_Create(0, 0, 600, 400, canvas_callback)
     GooeyCanvas_DrawRectangle(bg, 0, 0, 600, 400, 0xF5F5F5, True, 1.0, False, 0.0)
-    GooeyContainer_AddWidget(win, container, 1, bg)
+    GooeyContainer_AddWidget(win, container, 2, bg)
 
     title = GooeyLabel_Create("Installation Options", 0.5, 30, 40)
     GooeyLabel_SetColor(title, 0x2196F3)
-    GooeyContainer_AddWidget(win, container, 1, title)
+    GooeyContainer_AddWidget(win, container, 2, title)
 
     path_label = GooeyLabel_Create("Installation Directory:", 0.26, 30, 80)
     GooeyLabel_SetColor(path_label, 0x424242)
-    GooeyContainer_AddWidget(win, container, 1, path_label)
+    GooeyContainer_AddWidget(win, container, 2, path_label)
 
     global path_textbox
     if sys.platform.startswith('linux'):
@@ -547,46 +578,46 @@ def create_options_page(container):
         default_path = os.path.join(os.path.expanduser("~"), "GooeyFramework")
 
     path_textbox = GooeyTextBox_Create(30, 85, 450, 30, default_path, False, textbox_callback)
-    GooeyContainer_AddWidget(win, container, 1, path_textbox)
+    GooeyContainer_AddWidget(win, container, 2, path_textbox)
 
     browse_btn = GooeyButton_Create("Browse", 490, 85, 80, 30, browse_callback)
-    GooeyContainer_AddWidget(win, container, 1, browse_btn)
+    GooeyContainer_AddWidget(win, container, 2, browse_btn)
 
     path_note = GooeyLabel_Create(
         "Recommended (Requires root privileges): /usr/local (system-wide) or /usr (distribution-wide)",
         0.26, 30, 130
     )
     GooeyLabel_SetColor(path_note, 0x757575)
-    GooeyContainer_AddWidget(win, container, 1, path_note)
+    GooeyContainer_AddWidget(win, container, 2, path_note)
 
     comp_label = GooeyLabel_Create("Select Components:", 0.26, 30, 150)
     GooeyLabel_SetColor(comp_label, 0x424242)
-    GooeyContainer_AddWidget(win, container, 1, comp_label)
+    GooeyContainer_AddWidget(win, container, 2, comp_label)
 
     gui_checkbox = GooeyCheckbox_Create(30, 160, "GUI Components (required)", gui_component_callback)
-    GooeyContainer_AddWidget(win, container, 1, gui_checkbox)
+    GooeyContainer_AddWidget(win, container, 2, gui_checkbox)
 
     docs_checkbox = GooeyCheckbox_Create(30, 190, "Documentation", docs_component_callback)
-    GooeyContainer_AddWidget(win, container, 1, docs_checkbox)
+    GooeyContainer_AddWidget(win, container, 2, docs_checkbox)
 
     examples_checkbox = GooeyCheckbox_Create(30, 220, "Example Projects", examples_component_callback)
-    GooeyContainer_AddWidget(win, container, 1, examples_checkbox)
+    GooeyContainer_AddWidget(win, container, 2, examples_checkbox)
 
     bashrc_checkbox = GooeyCheckbox_Create(30, 250, "Add Gooey Framework to bashrc (recommended)", bashrc_callback)
-    GooeyContainer_AddWidget(win, container, 1, bashrc_checkbox)
+    GooeyContainer_AddWidget(win, container, 2, bashrc_checkbox)
 
     bashrc_note = GooeyLabel_Create("Adds environment variables to your bashrc for easy access", 0.26, 50, 280)
     GooeyLabel_SetColor(bashrc_note, 0x757575)
-    GooeyContainer_AddWidget(win, container, 1, bashrc_note)
+    GooeyContainer_AddWidget(win, container, 2, bashrc_note)
 
 def create_terms_page(container):
     bg = GooeyCanvas_Create(0, 0, 600, 400, canvas_callback)
     GooeyCanvas_DrawRectangle(bg, 0, 0, 600, 400, 0xF5F5F5, True, 1.0, False, 0.0)
-    GooeyContainer_AddWidget(win, container, 2, bg)
+    GooeyContainer_AddWidget(win, container, 3, bg)
 
     title = GooeyLabel_Create("Terms and Conditions", 0.5, 30, 40)
     GooeyLabel_SetColor(title, 0x2196F3)
-    GooeyContainer_AddWidget(win, container, 2, title)
+    GooeyContainer_AddWidget(win, container, 3, title)
 
     terms_text = [
         "END-USER LICENSE AGREEMENT FOR GOOEY FRAMEWORK",
@@ -610,112 +641,121 @@ def create_terms_page(container):
     for line in terms_text:
         term_label = GooeyLabel_Create(line, 0.26, 30, y_pos)
         GooeyLabel_SetColor(term_label, 0x616161)
-        GooeyContainer_AddWidget(win, container, 2, term_label)
+        GooeyContainer_AddWidget(win, container, 3, term_label)
         y_pos += 18
 
     global terms_checkbox
     terms_checkbox = GooeyCheckbox_Create(30, 350, "I accept the terms and conditions", terms_callback)
-    GooeyContainer_AddWidget(win, container, 2, terms_checkbox)
+    GooeyContainer_AddWidget(win, container, 3, terms_checkbox)
 
 def create_collaborate_page(container):
     bg = GooeyCanvas_Create(0, 0, 600, 400, canvas_callback)
     GooeyCanvas_DrawRectangle(bg, 0, 0, 600, 400, 0xF5F5F5, True, 1.0, False, 0.0)
-    GooeyContainer_AddWidget(win, container, 3, bg)
+    GooeyContainer_AddWidget(win, container, 4, bg)
 
     title = GooeyLabel_Create("Get Involved in the Development", 0.5, 30, 40)
     GooeyLabel_SetColor(title, 0x2196F3)
-    GooeyContainer_AddWidget(win, container, 3, title)
+    GooeyContainer_AddWidget(win, container, 4, title)
 
     subtitle = GooeyLabel_Create("Join the Gooey Framework community", 0.26, 30, 80)
     GooeyLabel_SetColor(subtitle, 0x424242)
-    GooeyContainer_AddWidget(win, container, 3, subtitle)
+    GooeyContainer_AddWidget(win, container, 4, subtitle)
 
     desc = GooeyLabel_Create(
         "Gooey Framework is an open-source project. We welcome contributions "
         "from developers of all skill levels.", 0.26, 30, 110
     )
     GooeyLabel_SetColor(desc, 0x616161)
-    GooeyContainer_AddWidget(win, container, 3, desc)
+    GooeyContainer_AddWidget(win, container, 4, desc)
 
     view_on_github_image = GooeyImage_Create("visit_github.png", 20, 180, int(625//2), int(151//2), github_callback)
-    GooeyContainer_AddWidget(win, container, 3, view_on_github_image)
+    GooeyContainer_AddWidget(win, container, 4, view_on_github_image)
    
     note = GooeyLabel_Create(
         "This option will open an external web browser.",
         0.26, 30, 300
     )
     GooeyLabel_SetColor(note, 0x2196F3)
-    GooeyContainer_AddWidget(win, container, 3, note)
+    GooeyContainer_AddWidget(win, container, 4, note)
 
 def create_install_page(container):
     bg = GooeyCanvas_Create(0, 0, 600, 400, canvas_callback)
     GooeyCanvas_DrawRectangle(bg, 0, 0, 600, 400, 0xF5F5F5, True, 1.0, False, 0.0)
-    GooeyContainer_AddWidget(win, container, 4, bg)
+    GooeyContainer_AddWidget(win, container, 5, bg)
 
     title = GooeyLabel_Create("Installing Gooey Framework", 0.5, 30, 50)
     GooeyLabel_SetColor(title, 0x2196F3)
-    GooeyContainer_AddWidget(win, container, 4, title)
+    GooeyContainer_AddWidget(win, container, 5, title)
 
     subtitle = GooeyLabel_Create(
         "Please wait while the installer sets up Gooey Framework on your system.", 0.26, 30, 90
     )
     GooeyLabel_SetColor(subtitle, 0x424242)
-    GooeyContainer_AddWidget(win, container, 4, subtitle)
+    GooeyContainer_AddWidget(win, container, 5, subtitle)
 
     step_label = GooeyLabel_Create("Installation Steps:", 0.26, 30, 130)
     GooeyLabel_SetColor(step_label, 0x616161)
-    GooeyContainer_AddWidget(win, container, 4, step_label)
+    GooeyContainer_AddWidget(win, container, 5, step_label)
 
     global progress_step_labels
     progress_step_labels = [
-        GooeyLabel_Create("• Copying library files...", 0.26, 50, 160),
-        GooeyLabel_Create("• Installing selected components...", 0.26, 50, 190),
-        GooeyLabel_Create("• Updating bashrc...", 0.26, 50, 220),
-        GooeyLabel_Create("• Finalizing installation...", 0.26, 50, 250)
+        GooeyLabel_Create("Copying library files...", 0.26, 50, 160),
+        GooeyLabel_Create("Installing selected components...", 0.26, 50, 190),
+        GooeyLabel_Create("Updating bashrc...", 0.26, 50, 220),
+        GooeyLabel_Create("Finalizing installation...", 0.26, 50, 250)
     ]
     for label in progress_step_labels:
         GooeyLabel_SetColor(label, 0x757575)
-        GooeyContainer_AddWidget(win, container, 4, label)
+        GooeyContainer_AddWidget(win, container, 5, label)
 
     global progress_bar
     progress_bar = GooeyProgressBar_Create(30, 280, 520, 30, 0)
-    GooeyContainer_AddWidget(win, container, 4, progress_bar)
+    GooeyContainer_AddWidget(win, container, 5, progress_bar)
 
     global status_label
     status_label = GooeyLabel_Create("Preparing to install...", 0.26, 30, 330)
     GooeyLabel_SetColor(status_label, 0x616161)
-    GooeyContainer_AddWidget(win, container, 4, status_label)
+    GooeyContainer_AddWidget(win, container, 5, status_label)
 
 def create_complete_page(container):
     bg = GooeyCanvas_Create(0, 0, 600, 400, canvas_callback)
     GooeyCanvas_DrawRectangle(bg, 0, 0, 600, 400, 0xF5F5F5, True, 1.0, False, 0.0)
-    GooeyContainer_AddWidget(win, container, 5, bg)
+    GooeyContainer_AddWidget(win, container, 6, bg)
 
     complete_icon = GooeyImage_Create("progress-complete.png", 60, 75, 96, 96, image_placeholder_callback)
-    GooeyContainer_AddWidget(win, container, 5, complete_icon)
+    GooeyContainer_AddWidget(win, container, 6, complete_icon)
 
     title = GooeyLabel_Create("Installation Complete", 0.5, 50, 220)
     GooeyLabel_SetColor(title, 0x4CAF50)
-    GooeyContainer_AddWidget(win, container, 5, title)
+    GooeyContainer_AddWidget(win, container, 6, title)
 
     msg = GooeyLabel_Create("Gooey Framework has been successfully installed on your system.", 0.26, 50, 260)
     GooeyLabel_SetColor(msg, 0x424242)
-    GooeyContainer_AddWidget(win, container, 5, msg)
+    GooeyContainer_AddWidget(win, container, 6, msg)
 
     steps = GooeyLabel_Create("You can now start using Gooey Framework in your C projects.", 0.26, 50, 290)
     GooeyLabel_SetColor(steps, 0x616161)
-    GooeyContainer_AddWidget(win, container, 5, steps)
+    GooeyContainer_AddWidget(win, container, 6, steps)
+
+    python_binding = GooeyLabel_Create(
+        "For Python bindings click on the button below: ", 0.26, 50, 335
+    )
+    GooeyLabel_SetColor(python_binding, 0x2196F3)
+    GooeyContainer_AddWidget(win, container, 6, python_binding)
+    
+    python_btn = GooeyButton_Create("Gooey Python Bindings", 350, 315, 180, 30, documentation_callback)
+    GooeyContainer_AddWidget(win, container, 6, python_btn)
 
     if install_options.get("link_bashrc", True):
         bashrc_note = GooeyLabel_Create("Note: Gooey Framework has been added to your bashrc. Restart your terminal or run 'source ~/.bashrc' to apply changes.", 0.26, 20, 350)
         GooeyLabel_SetColor(bashrc_note, 0x2196F3)
-        GooeyContainer_AddWidget(win, container, 5, bashrc_note)
-
-    #launch_check = GooeyCheckbox_Create(50, 310, "Launch documentation after installation", launch_docs_callback)
-    #GooeyContainer_AddWidget(win, container, 5, launch_check)
+        GooeyContainer_AddWidget(win, container, 6, bashrc_note)
 
 def main():
-    global main_container, next_button, back_button, win
+    global main_container, next_button, back_button, win, is_sudo
+    # Check for sudo privileges
+    is_sudo = os.geteuid() == 0 if sys.platform.startswith('linux') else True
+
     Gooey_Init()
     win = GooeyWindow_Create("Gooey Framework Installer", 600, 500, True)
     GooeyWindow_MakeResizable(win, False)
@@ -724,39 +764,59 @@ def main():
     for _ in range(total_pages):
         GooeyContainer_InsertContainer(main_container)
 
-    create_welcome_page(main_container)
-    create_options_page(main_container)
-    create_terms_page(main_container)
-    create_collaborate_page(main_container)
-    create_install_page(main_container)
-    create_complete_page(main_container)
+    if not is_sudo:
+        create_warning_page(main_container)
+        GooeyContainer_SetActiveContainer(main_container, 0)
+        GooeyWindow_RegisterWidget(win, main_container)
 
-    GooeyContainer_SetActiveContainer(main_container, 0)
-    GooeyWindow_RegisterWidget(win, main_container)
+        next_button = GooeyButton_Create("Exit", 490, 420, 80, 30, next_callback)
+        GooeyWindow_RegisterWidget(win, next_button)
+        GooeyButton_SetHighlight(next_button, True)
 
-    back_button = GooeyButton_Create("Back", 400, 420, 80, 30, back_callback)
-    GooeyButton_SetEnabled(back_button, False)
-    GooeyWindow_RegisterWidget(win, back_button)
+        cancel_btn = GooeyButton_Create("Cancel", 310, 420, 80, 30, cancel_callback)
+        GooeyWindow_RegisterWidget(win, cancel_btn)
 
-    next_button = GooeyButton_Create("Next", 490, 420, 80, 30, next_callback)
-    GooeyWindow_RegisterWidget(win, next_button)
-    GooeyButton_SetHighlight(next_button, True)
+        footer = GooeyCanvas_Create(0, 460, 600, 40, canvas_callback)
+        GooeyCanvas_DrawRectangle(footer, 0, 0, 600, 40, 0xEEEEEE, True, 1.0, False, 0.0)
+        GooeyWindow_RegisterWidget(win, footer)
 
-    cancel_btn = GooeyButton_Create("Cancel", 310, 420, 80, 30, cancel_callback)
-    GooeyWindow_RegisterWidget(win, cancel_btn)
+        copyright = GooeyLabel_Create("Installer made with Gooey by binaryink.dev | Version 1.0.3", 0.26, 30, 485)
+        GooeyLabel_SetColor(copyright, 0x616161)
+        GooeyWindow_RegisterWidget(win, copyright)
+    else:
+        create_welcome_page(main_container)
+        create_options_page(main_container)
+        create_terms_page(main_container)
+        create_collaborate_page(main_container)
+        create_install_page(main_container)
+        create_complete_page(main_container)
 
-    global page_counter
-    page_counter = GooeyLabel_Create(f"Page {current_page + 1} of {total_pages}", 0.26, 30, 425)
-    GooeyLabel_SetColor(page_counter, 0x757575)
-    GooeyWindow_RegisterWidget(win, page_counter)
+        GooeyContainer_SetActiveContainer(main_container, 1)
+        GooeyWindow_RegisterWidget(win, main_container)
 
-    footer = GooeyCanvas_Create(0, 460, 600, 40, canvas_callback)
-    GooeyCanvas_DrawRectangle(footer, 0, 0, 600, 40, 0xEEEEEE, True, 1.0, False, 0.0)
-    GooeyWindow_RegisterWidget(win, footer)
+        back_button = GooeyButton_Create("Back", 400, 420, 80, 30, back_callback)
+        GooeyButton_SetEnabled(back_button, False)
+        GooeyWindow_RegisterWidget(win, back_button)
 
-    copyright = GooeyLabel_Create("Installer made with Gooey by binaryink.dev | Version 1.0.3", 0.26, 30, 485)
-    GooeyLabel_SetColor(copyright, 0x616161)
-    GooeyWindow_RegisterWidget(win, copyright)
+        next_button = GooeyButton_Create("Next", 490, 420, 80, 30, next_callback)
+        GooeyWindow_RegisterWidget(win, next_button)
+        GooeyButton_SetHighlight(next_button, True)
+
+        cancel_btn = GooeyButton_Create("Cancel", 310, 420, 80, 30, cancel_callback)
+        GooeyWindow_RegisterWidget(win, cancel_btn)
+
+        global page_counter
+        page_counter = GooeyLabel_Create(f"Page {current_page + 1} of {total_pages}", 0.26, 30, 425)
+        GooeyLabel_SetColor(page_counter, 0x757575)
+        GooeyWindow_RegisterWidget(win, page_counter)
+
+        footer = GooeyCanvas_Create(0, 460, 600, 40, canvas_callback)
+        GooeyCanvas_DrawRectangle(footer, 0, 0, 600, 40, 0xEEEEEE, True, 1.0, False, 0.0)
+        GooeyWindow_RegisterWidget(win, footer)
+
+        copyright = GooeyLabel_Create("Installer made with Gooey by binaryink.dev | Version 1.0.3", 0.26, 30, 485)
+        GooeyLabel_SetColor(copyright, 0x616161)
+        GooeyWindow_RegisterWidget(win, copyright)
 
     GooeyWindow_Run(1, win)
     GooeyWindow_Cleanup(1, win)
