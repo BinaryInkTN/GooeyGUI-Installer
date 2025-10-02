@@ -1,0 +1,513 @@
+{
+  "installer_metadata": {
+    "version": "2.1.0",
+    "config_version": "1.0",
+    "description": "My Awesome Application Installer Configuration",
+    "created": "2024-01-15",
+    "author": "Your Company"
+  },
+
+
+  "installer_config": {
+    "enable_welcome": true,
+    "enable_options": true,
+    "enable_terms": true,
+    "enable_collaborate": true,
+    "enable_install": true,
+    "enable_complete": true,
+    "enable_maintenance": false,
+    "show_page_counter": true,
+    "allow_cancellation": true,
+    "require_admin": true,
+    "auto_advance": false,
+    "show_progress_steps": true,
+    "enable_back_button": true,
+    "validate_install_path": true,
+    "check_disk_space": true,
+    "create_uninstaller": true,
+    "backup_existing": false,
+    "force_install": false,
+    "silent_mode": false,
+    "log_level": "INFO"
+  },
+
+  "installation": {
+    "default_install_path": "/usr/local/MyApp",
+    "source_path": "./dist",
+    "require_components": true,
+    "create_uninstaller": true,
+    "backup_existing": true,
+    "minimum_disk_space": 500,
+    "minimum_memory": 2048,
+    "supported_platforms": ["windows", "linux", "darwin"],
+    "admin_required_paths": ["/usr", "/usr/local", "C:\\Program Files"],
+    "temp_directory": "/tmp/myapp_installer"
+  },
+
+  "pages": {
+    "welcome": {
+      "enabled": true,
+      "title": "Install My Awesome App v2.1.0",
+      "message": "Welcome to My Awesome Application Installation Wizard",
+      "description": "This wizard will guide you through the installation process.",
+      "requirements": "System Requirements: 500MB disk space, 2GB RAM",
+      "image": "assets/welcome_bg.jpg",
+      "logo": "assets/logo.png",
+      "show_system_info": true,
+      "custom_text": "Thank you for choosing our application!",
+      "alignment": "center",
+      "show_version": true,
+      "show_requirements": true
+    },
+
+    "options": {
+      "enabled": true,
+      "title": "Installation Options",
+      "message": "Select the components and options you want to install",
+      "path_label": "Installation Directory:",
+      "path_note": "Recommended system paths or custom location",
+      "components_label": "Select Components:",
+      "options_label": "Installation Options:",
+      "show_size_info": true,
+      "show_component_descriptions": true,
+      "allow_custom_path": true,
+      "validate_path_writeable": true,
+      "components": [
+        {
+          "id": "core",
+          "label": "Application Core Files",
+          "description": "Essential application files and libraries (required)",
+          "default": true,
+          "required": true,
+          "size": "150MB",
+          "callback": "core"
+        },
+        {
+          "id": "documentation",
+          "label": "Documentation and Help Files",
+          "description": "User manuals, API documentation, and help system",
+          "default": true,
+          "required": false,
+          "size": "80MB",
+          "callback": "documentation"
+        },
+        {
+          "id": "examples",
+          "label": "Example Projects",
+          "description": "Sample code and demonstration projects",
+          "default": false,
+          "required": false,
+          "size": "50MB",
+          "callback": "examples"
+        },
+        {
+          "id": "plugins",
+          "label": "Plugin System",
+          "description": "Extensible plugin architecture and base plugins",
+          "default": false,
+          "required": false,
+          "size": "40MB",
+          "callback": "plugins"
+        },
+        {
+          "id": "development",
+          "label": "Development Tools",
+          "description": "SDK and development utilities",
+          "default": false,
+          "required": false,
+          "size": "60MB",
+          "callback": "development"
+        },
+        {
+          "id": "themes",
+          "label": "UI Themes",
+          "description": "Additional visual themes and skins",
+          "default": false,
+          "required": false,
+          "size": "30MB",
+          "callback": "themes"
+        }
+      ],
+      "options": [
+        {
+          "id": "create_desktop_shortcut",
+          "label": "Create Desktop Shortcut",
+          "description": "Add a shortcut to your desktop for easy access",
+          "default": true,
+          "callback": "desktop_shortcut"
+        },
+        {
+          "id": "create_start_menu",
+          "label": "Add to Start Menu",
+          "description": "Create Start Menu entry (Windows only)",
+          "default": true,
+          "callback": "start_menu"
+        },
+        {
+          "id": "add_to_path",
+          "label": "Add to System PATH",
+          "description": "Make command-line tools accessible from anywhere",
+          "default": true,
+          "callback": "add_to_path"
+        },
+        {
+          "id": "file_associations",
+          "label": "Register File Associations",
+          "description": "Associate file types with this application",
+          "default": false,
+          "callback": "file_associations"
+        },
+        {
+          "id": "auto_updates",
+          "label": "Enable Auto Updates",
+          "description": "Automatically check for and install updates",
+          "default": true,
+          "callback": "auto_updates"
+        },
+        {
+          "id": "usage_statistics",
+          "label": "Send Usage Statistics",
+          "description": "Help improve the product by sending anonymous usage data",
+          "default": false,
+          "callback": "usage_statistics"
+        },
+        {
+          "id": "link_bashrc",
+          "label": "Update Shell Configuration",
+          "description": "Add environment variables to bashrc/zshrc",
+          "default": true,
+          "callback": "link_bashrc"
+        },
+        {
+          "id": "launch_docs",
+          "label": "Launch Documentation After Install",
+          "description": "Open documentation in browser after installation",
+          "default": false,
+          "callback": "launch_docs"
+        },
+        {
+          "id": "install_picoflasher",
+          "label": "Install PicoFlasher Tool",
+          "description": "Install additional PicoFlasher utility",
+          "default": false,
+          "callback": "install_picoflasher"
+        },
+        {
+          "id": "launch_after_install",
+          "label": "Launch After Installation",
+          "description": "Automatically start the application after install",
+          "default": true,
+          "callback": "launch_after_install"
+        },
+        {
+          "id": "install_dependencies",
+          "label": "Install Dependencies",
+          "description": "Automatically install required system dependencies",
+          "default": true,
+          "callback": "install_dependencies"
+        }
+      ]
+    },
+
+    "terms": {
+      "enabled": true,
+      "title": "License Agreement",
+      "require_acceptance": true,
+      "license_file": null,
+      "show_scrollbar": true,
+      "height": 300,
+      "acceptance_text": "I accept the terms and conditions"
+    },
+
+    "collaborate": {
+      "enabled": true,
+      "title": "Join Our Community",
+      "subtitle": "Become Part of Our Family",
+      "description": "Our application is more than just software - it's a community of developers and users working together.",
+      "links": [
+        {
+          "label": "GitHub Repository",
+          "url": "https://github.com/BinaryInkTN/GooeyGUI",
+          "image": "assets/github_icon.png",
+          "description": "View source code and contribute"
+        },
+        {
+          "label": "Documentation",
+          "url": "https://github.com/BinaryInkTN/GooeyGUI-Python",
+          "image": "assets/docs_icon.png",
+          "description": "Read comprehensive documentation"
+        },
+        {
+          "label": "Report Issues",
+          "url": "https://github.com/BinaryInkTN/GooeyGUI/issues",
+          "image": "assets/issues_icon.png",
+          "description": "Submit bug reports and feature requests"
+        },
+        {
+          "label": "Contribution Guide",
+          "url": "https://github.com/BinaryInkTN/GooeyGUI/blob/main/CONTRIBUTING.md",
+          "image": "assets/contribute_icon.png",
+          "description": "Learn how to contribute to the project"
+        }
+      ],
+      "newsletter": {
+        "enabled": false,
+        "label": "Subscribe to Newsletter",
+        "description": "Get updates about new features and releases",
+        "placeholder": "Enter your email address",
+        "default_value": ""
+      },
+      "social_media": {
+        "enabled": false,
+        "twitter": null,
+        "facebook": null,
+        "linkedin": null,
+        "youtube": null
+      }
+    },
+
+    "install": {
+      "enabled": true,
+      "title": "Installing Application",
+      "subtitle": "Please wait while we set up the application on your system",
+      "estimated_time": "2-5 minutes",
+      "show_file_list": false,
+      "show_details": true,
+      "show_time_remaining": true,
+      "show_speed": false,
+      "steps": [
+        {
+          "id": "preparation",
+          "label": "Preparing installation environment...",
+          "description": "Checking system requirements and preparing files",
+          "weight": 5
+        },
+        {
+          "id": "dependencies",
+          "label": "Installing dependencies...",
+          "description": "Downloading and installing required packages",
+          "weight": 20
+        },
+        {
+          "id": "core_files",
+          "label": "Copying core application files...",
+          "description": "Installing main executable and libraries",
+          "weight": 40
+        },
+        {
+          "id": "documentation",
+          "label": "Installing documentation...",
+          "description": "Copying help files and user manuals",
+          "weight": 15
+        },
+        {
+          "id": "configuration",
+          "label": "Configuring system settings...",
+          "description": "Updating PATH and environment variables",
+          "weight": 10
+        },
+        {
+          "id": "finalization",
+          "label": "Finalizing installation...",
+          "description": "Completing setup and cleaning temporary files",
+          "weight": 10
+        }
+      ],
+      "animations": {
+        "enabled": true,
+        "type": "progress_bar",
+        "speed": "normal"
+      }
+    },
+
+    "complete": {
+      "enabled": true,
+      "title": "Installation Complete!",
+      "message": "My Awesome App has been successfully installed on your system",
+      "description": "You can now start using the application to boost your productivity.",
+      "show_installation_path": true,
+      "show_components_installed": true,
+      "show_next_steps": true,
+      "actions": [
+        {
+          "label": "Launch Application",
+          "type": "launch",
+          "target": "/usr/local/MyApp/bin/myapp",
+          "default": true,
+          "enabled": true
+        },
+        {
+          "label": "Open Installation Folder",
+          "type": "explore",
+          "target": "",
+          "default": false,
+          "enabled": true
+        },
+        {
+          "label": "View Documentation",
+          "type": "url",
+          "target": "https://github.com/BinaryInkTN/GooeyGUI-Python",
+          "default": false,
+          "enabled": true
+        }
+      ],
+      "notes": [
+        "• You can launch the application from the Start Menu or Applications folder",
+        "• Check out the documentation for getting started guides",
+        "• Join our community for support and updates"
+      ],
+      "show_readme": true,
+      "readme_file": "assets/README.txt",
+      "show_restart_required": false,
+      "restart_message": "A system restart is required to complete the installation."
+    }
+  },
+
+  "custom_pages": [],
+
+  "hooks": {
+    "pre_install": {
+      "enabled": false,
+      "script": "scripts/pre_install.py",
+      "description": "Run before installation begins",
+      "timeout": 300
+    },
+    "post_install": {
+      "enabled": false,
+      "script": "scripts/post_install.py",
+      "description": "Run after installation completes",
+      "timeout": 300
+    },
+    "pre_uninstall": {
+      "enabled": false,
+      "script": "scripts/pre_uninstall.py",
+      "description": "Run before uninstallation begins",
+      "timeout": 300
+    },
+    "post_uninstall": {
+      "enabled": false,
+      "script": "scripts/post_uninstall.py",
+      "description": "Run after uninstallation completes",
+      "timeout": 300
+    },
+    "validation": {
+      "enabled": false,
+      "script": "scripts/validation.py",
+      "description": "Run custom validation checks",
+      "timeout": 60
+    }
+  },
+
+  "validation": {
+    "disk_space": 500,
+    "memory": 2048,
+    "platforms": ["windows", "linux", "darwin"],
+    "dependencies": [],
+    "file_checks": []
+  },
+
+  "branding": {
+    "company_name": "Your Company",
+    "website": "https://www.example.com",
+    "support_email": "support@example.com",
+    "support_phone": "",
+    "copyright": "© 2024 Your Company. All rights reserved.",
+    "icons": {
+      "installer": "assets/installer_icon.ico",
+      "application": "assets/app_icon.ico",
+      "header": "assets/header_logo.png",
+      "footer": "assets/footer_logo.png"
+    },
+    "splash_screen": {
+      "enabled": false,
+      "image": "assets/splash.png",
+      "duration": 2000
+    },
+    "watermark": {
+      "enabled": false,
+      "text": "Installer",
+      "position": "bottom_right",
+      "opacity": 0.1
+    }
+  },
+
+  "localization": {
+    "language": "en",
+    "fallback_language": "en",
+    "available_languages": ["en"],
+    "strings": {
+      "next_button": "Next",
+      "back_button": "Back",
+      "cancel_button": "Cancel",
+      "install_button": "Install",
+      "finish_button": "Finish",
+      "browse_button": "Browse",
+      "accept_button": "Accept",
+      "decline_button": "Decline"
+    }
+  },
+
+  "logging": {
+    "enabled": true,
+    "level": "INFO",
+    "file": "installer.log",
+    "max_size": 10485760,
+    "backup_count": 5,
+    "format": "%(asctime)s - %(levelname)s - %(message)s"
+  },
+
+  "security": {
+    "verify_digital_signature": false,
+    "signature_file": "installer.sig",
+    "checksum_verification": false,
+    "checksum_file": "checksums.sha256",
+    "allow_unsigned": true,
+    "require_admin_for_system_paths": true
+  },
+
+  "uninstaller": {
+    "create_uninstaller": true,
+    "uninstaller_name": "Uninstall_MyApp",
+    "add_to_programs": true,
+    "remove_user_data": false,
+    "backup_before_uninstall": true,
+    "uninstall_log": "uninstall.log"
+  },
+
+  "maintenance": {
+    "enabled": false,
+    "modify_enabled": true,
+    "repair_enabled": true,
+    "uninstall_enabled": true,
+    "maintenance_actions": [
+      {
+        "id": "modify",
+        "label": "Modify Installation",
+        "description": "Add or remove components"
+      },
+      {
+        "id": "repair",
+        "label": "Repair Installation",
+        "description": "Fix corrupted files and settings"
+      },
+      {
+        "id": "uninstall",
+        "label": "Uninstall Application",
+        "description": "Remove application from your system"
+      }
+    ]
+  },
+
+  "advanced": {
+    "temp_directory": "/tmp/ggif_installer",
+    "max_concurrent_downloads": 3,
+    "download_timeout": 300,
+    "install_timeout": 1800,
+    "retry_attempts": 3,
+    "retry_delay": 5,
+    "cleanup_temp_files": true,
+    "preserve_logs": true,
+    "debug_mode": false,
+    "simulate_installation": false
+  }
+}
