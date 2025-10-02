@@ -4,7 +4,7 @@ import shutil
 import threading
 import time
 import tkinter as tk
-from tkinter import filedialog, messagebox
+from urllib import response
 import webbrowser
 import subprocess
 from gooey_button import GooeyButton_Create, GooeyButton_SetText, GooeyButton_SetEnabled, GooeyButton_SetHighlight, GooeyButtonCallback
@@ -18,6 +18,8 @@ from gooey_checkbox import GooeyCheckbox_Create, GooeyCheckboxCallback
 from gooey_image import GooeyImage_Create, GooeyImageCallback
 from gooey_widget import Gooey_Init
 from gooey_theme import *
+from gooey_fdialog import GooeyFDialog_Open, GooeyFDialogCallback
+
 
 COLORS = {
     "background": 0x212121,  
@@ -128,29 +130,26 @@ def cancel_callback():
     global win
     GooeyWindow_RequestCleanup(win)
 
+@GooeyFDialogCallback
+def file_dialog_callback(selected_path_bytes):
+    global selected_path
+    if selected_path_bytes:
+        selected_path = selected_path_bytes.decode('utf-8')
+    else:
+        selected_path = None
+
 @GooeyButtonCallback
 def browse_callback():
+    GooeyFDialog_Open("/ur/local", [["All Files (*.*)", "image"], ["*.png", "*.jpg"]], file_dialog_callback)
+
     global install_path, path_textbox
     current_path = GooeyTextbox_GetText(path_textbox)
     default_paths = ["/usr/local", "/usr"]
     if any(current_path.startswith(path) for path in default_paths):
-        root = tk.Tk()
-        root.withdraw()
-        response = messagebox.askyesno(
-            "Warning: Changing Installation Path",
-            "Changing from default system path may require additional configuration.\nContinue?",
-            icon=messagebox.WARNING
-        )
-        root.destroy()
-        if not response:
-            return
-    root = tk.Tk()
-    root.withdraw()
-    selected_path = filedialog.askdirectory(title="Select Installation Directory", initialdir=os.path.expanduser("~"))
-    root.destroy()
-    if selected_path:
-        install_path = selected_path
-        GooeyTextbox_SetText(path_textbox, install_path)
+        pass
+   # if selected_path:
+   #     install_path = selected_path
+   #     GooeyTextbox_SetText(path_textbox, install_path)
 
 @GooeyCheckboxCallback
 def gui_component_callback(checked):
@@ -271,15 +270,7 @@ def validate_options():
         update_status("Please select at least the GUI components to install")
         return False
     if sys.platform.startswith('linux') and not install_path.startswith(('/usr', '/usr/local')):
-        root = tk.Tk()
-        root.withdraw()
-        response = messagebox.askyesno(
-            "Custom Installation Path Warning",
-            "You have selected a custom installation path.\n\n"
-            "Recommended: /usr/local or /usr.\nCustom paths may require setting LD_LIBRARY_PATH and C_INCLUDE_PATH.\n\nContinue?",
-            icon=messagebox.WARNING
-        )
-        root.destroy()
+        #implement custom installation path warning TODO
         if not response:
             return False
     try:
@@ -518,9 +509,8 @@ def create_warning_page(container):
     GooeyContainer_AddWidget(win, container, 1, steps)
 
 def create_welcome_page(container):
-    bg = GooeyCanvas_Create(0, 0, 600, 400, canvas_callback)
-    GooeyCanvas_DrawRectangle(bg, 0, 0, 600, 400, COLORS["background"], True, 1.0, False, 0.0)
-    GooeyContainer_AddWidget(win, container, 2, bg)
+    bg_image = GooeyImage_Create("bg.jpg", 0, 0, 1200, 800, image_placeholder_callback)
+    GooeyContainer_AddWidget(win, container, 2, bg_image)
     gooey_logo = GooeyImage_Create("logo_new_trans.png", 25, 20, 280, 84, image_placeholder_callback)
     GooeyContainer_AddWidget(win, container, 2, gooey_logo)
     title = GooeyLabel_Create("Gooey Framework v1.0.3 Installer", 0.5, 50, 150)
